@@ -222,6 +222,7 @@ class Player(object):
         self.image = pygame.image.load('img/snake.png')
         self.x_change = 20
         self.y_change = 0
+        self.direction = 'right'
 
     def update_position(self, x, y):
         if self.position[-1][0] != x or self.position[-1][1] != y:
@@ -239,15 +240,90 @@ class Player(object):
         #     self.eaten = False
         #     self.food = self.food + 1
         if np.array_equal(move, [1, 0, 0]):
+            print('1')
+            print(self.x_change)
+            print(self.y_change)
             move_array = self.x_change, self.y_change
         elif np.array_equal(move, [0, 1, 0]) and self.y_change == 0:  # right - going horizontal
+            print('2')
+            print(self.x_change)
+            print(self.y_change)
             move_array = [0, self.x_change]
         elif np.array_equal(move, [0, 1, 0]) and self.x_change == 0:  # right - going vertical
+            print('3')
+            print(self.x_change)
+            print(self.y_change)
             move_array = [-self.y_change, 0]
         elif np.array_equal(move, [0, 0, 1]) and self.y_change == 0:  # left - going horizontal
+            print('4')
+            print(self.x_change)
+            print(self.y_change)
             move_array = [0, -self.x_change]
         elif np.array_equal(move, [0, 0, 1]) and self.x_change == 0:  # left - going vertical
+            print('5')
+            print(self.x_change)
+            print(self.y_change)
             move_array = [self.y_change, 0]
+        self.x_change, self.y_change = move_array
+        self.x = x + self.x_change
+        self.y = y + self.y_change
+
+        if self.x < 20 or self.x > game.width \
+                or self.y < 20 \
+                or self.y > game.height \
+                or [self.x, self.y] in self.position:
+            game.crash = True
+        eat(self, food, game)
+        if self.eaten:
+            self.position.append([self.x, self.y])
+            self.eaten = False
+            self.food = self.food + 1
+
+        self.update_position(self.x, self.y)
+
+    def do_move2(self, move, x, y, game, food):
+        move_array = [self.x_change, self.y_change]
+        done = True
+
+        if self.direction == 'right':
+            if move == 'down':
+                move_array = [0, self.x_change]
+            elif move == 'right':
+                move_array = self.x_change, self.y_change
+            elif move == 'up':
+                move_array = [0, -self.x_change]
+            else:
+                done = False
+        if self.direction == 'up':
+            if move == 'left':
+                move_array = [self.y_change, 0]
+            elif move == 'up':
+                move_array = self.x_change, self.y_change
+            elif move == 'right':
+                move_array = [-self.y_change, 0]
+            else:
+                done = False
+        if self.direction == 'left':
+            if move == 'up':
+                move_array = [0, self.x_change]
+            elif move == 'left':
+                move_array = self.x_change, self.y_change
+            elif move == 'down':
+                move_array = [0, -self.x_change]
+            else:
+                done = False
+        if self.direction == 'down':
+            if move == 'left':
+                move_array = [-self.y_change, 0]
+            elif move == 'down':
+                move_array = self.x_change, self.y_change
+            elif move == 'right':
+                move_array = [self.y_change, 0]
+            else:
+                done = False
+        if done:
+            self.direction = move
+
         self.x_change, self.y_change = move_array
         self.x = x + self.x_change
         self.y = y + self.y_change
