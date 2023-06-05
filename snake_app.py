@@ -41,12 +41,14 @@ class SnakeApp(object):
         self.font = pygame.font.SysFont('Arial', 20)
         self.click = False
         self.clock = pygame.time.Clock()
+        self.record = 0
 
         #self.actions = []
         #self.needs_actions = True
 
         #self.init_game()
         self.main_menu()
+        self.human = False
 
 
     def main_menu(self):
@@ -63,12 +65,18 @@ class SnakeApp(object):
             mx, my = pygame.mouse.get_pos()
             if button_1.collidepoint((mx, my)):
                 if self.click:
-                    humanPlay()
+                    # initialize()
+                    # self.human = True
+                    # print('tu sam')
+                    #humanPlay()
+                    config['human'] = True
                     intro = False
 
             if button_2.collidepoint((mx, my)):
                 if self.click:
-                    initialize()
+                    #()
+                    config['human'] = False
+                    pygame.event.set_blocked(pygame.MOUSEMOTION)
                     intro = False
 
             pygame.draw.rect(self.screen, blue, button_1, border_radius=15)
@@ -102,28 +110,6 @@ class SnakeApp(object):
         surface.blit(textobj, textrect)
 
 
-    # pokrece igru
-    def init(self):
-        # upravljanje preko tipkovnice
-        self.key_actions = {
-            'ESCAPE': self.quit,
-            'LEFT': lambda:self.move(0),
-            'RIGHT': lambda:self.move(1),
-            'UP': lambda:self.move(2),
-            'DOWN': lambda:self.move(3),
-            'p': self.pause
-        }
-
-        self.crash = False
-        self.paused = False
-
-        # timer ?
-        pygame.time.set_timer(pygame.USEREVENT + 1, config['delay'])
-        self.clock = pygame.time.Clock()
-
-
-
-
 
 class Game(object):
     def __init__(self):
@@ -145,23 +131,45 @@ class Game(object):
         self.player = Player(self)
         self.food = Food()
         self.score = 0
+        self.human = True
 
-        self.init_game()
+        #self.init_game()
 
         #pygame.display.flip()
         #pygame.display.update()
         #self.clock.tick(60)
 
-    def init_game(self):
-        self.score = 0
-        # self.board = new_board()
-        return
-
-    def start_game(self):
-        if self.crash:
-            self.game = Game()
-            self.init_game()
-            self.crash = False
+    # pokrece igru
+    # def init(self):
+    #     # upravljanje preko tipkovnice
+    #     self.key_actions = {
+    #         'ESCAPE': self.quit,
+    #         'LEFT': lambda: self.move(0),
+    #         'RIGHT': lambda: self.move(1),
+    #         'UP': lambda: self.move(2),
+    #         'DOWN': lambda: self.move(3),
+    #         'p': self.pause,
+    #         'SPACE': self.start_game
+    #     }
+    #
+    #     self.crash = False
+    #     self.paused = False
+    #
+    #     # timer ?
+    #     pygame.time.set_timer(pygame.USEREVENT + 1, config['delay'])
+    #     self.clock = pygame.time.Clock()
+    #
+    # def init_game(self):
+    #     self.score = 0
+    #     return
+    #
+    # def start_game(self):
+    #     print('start')
+    #     if self.crash:
+    #         self.game = Game()
+    #         self.score = 0
+    #         #self.init_game()
+    #         self.crash = False
 
     def get_state(self):
         return {"position": np.copy(self.player.position),
@@ -323,9 +331,12 @@ def initialize_game(player, game, food, agent, batch_size, is_train):
         agent.remember(state_init1, action, reward1, state_init2, game.crash)
         agent.replay_mem(agent.memory, batch_size)
 
-def initialize():
+def initialize(record=0):
     pygame.init()
-    record = 0
+    if record == 0:
+        record = 0
+    else:
+        record = record
     game = Game()
     player1 = game.player
     food1 = game.food
@@ -337,6 +348,7 @@ def run(game, player1, food1, record):
     # game = Game()
     # player1 = game.player
     # food1 = game.food
+    print('run')
 
     while not game.crash:
         for event in pygame.event.get():
@@ -353,14 +365,18 @@ def run(game, player1, food1, record):
         player1.do_move(action, player1.x, player1.y, game, food1)
         state = game.get_state()
 
-
         game.dont_burn_my_cpu.tick(config['maxfps'])
-        #time.sleep(1)
+        #time.sleep(0.5)
+
+    while not game.crash:
+        display(player1, food1, game, record)
 
 
 def humanPlay():
+    print('human in snake_app')
     pygame.init()
-    record = 0
+    game, player1, food1, record = initialize()
+    game.human = True
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -372,16 +388,4 @@ def humanPlay():
     food1 = game.food
 
     display(player1, food1, game, record)
-
-
-    while not game.crash:
-        display(player1, food1, game, record)
-
-
-
-
-
-if __name__ == '__main__':
-    App = SnakeApp()
-    #run()
 
