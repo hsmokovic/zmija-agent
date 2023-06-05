@@ -19,7 +19,8 @@ config = {
     'cols': 30,
     'rows': 30,
     'delay': 750,
-    'maxfps': 30
+    'maxfps': 30,
+    'playfps': 5
 }
 
 black = (0, 0, 0)
@@ -65,10 +66,6 @@ class SnakeApp(object):
             mx, my = pygame.mouse.get_pos()
             if button_1.collidepoint((mx, my)):
                 if self.click:
-                    # initialize()
-                    # self.human = True
-                    # print('tu sam')
-                    #humanPlay()
                     config['human'] = True
                     intro = False
 
@@ -118,7 +115,7 @@ class Game(object):
         self.width = config['cell_size']*config['cols']
         self.height = config['cell_size']*config['rows']
         self.gameDisplay = pygame.display.set_mode((self.width, self.height))
-        self.gameDisplay.fill(white)
+        self.gameDisplay.fill(black)
 
         pygame.display.set_caption('Snake Game')
         self.font = pygame.font.SysFont('Arial', 20)
@@ -232,56 +229,8 @@ class Player(object):
             self.position[-1][0] = x
             self.position[-1][1] = y
 
+
     def do_move(self, move, x, y, game, food):
-        move_array = [self.x_change, self.y_change]
-
-        # if self.eaten:
-        #     self.position.append([self.x, self.y])
-        #     self.eaten = False
-        #     self.food = self.food + 1
-        if np.array_equal(move, [1, 0, 0]):
-            print('1')
-            print(self.x_change)
-            print(self.y_change)
-            move_array = self.x_change, self.y_change
-        elif np.array_equal(move, [0, 1, 0]) and self.y_change == 0:  # right - going horizontal
-            print('2')
-            print(self.x_change)
-            print(self.y_change)
-            move_array = [0, self.x_change]
-        elif np.array_equal(move, [0, 1, 0]) and self.x_change == 0:  # right - going vertical
-            print('3')
-            print(self.x_change)
-            print(self.y_change)
-            move_array = [-self.y_change, 0]
-        elif np.array_equal(move, [0, 0, 1]) and self.y_change == 0:  # left - going horizontal
-            print('4')
-            print(self.x_change)
-            print(self.y_change)
-            move_array = [0, -self.x_change]
-        elif np.array_equal(move, [0, 0, 1]) and self.x_change == 0:  # left - going vertical
-            print('5')
-            print(self.x_change)
-            print(self.y_change)
-            move_array = [self.y_change, 0]
-        self.x_change, self.y_change = move_array
-        self.x = x + self.x_change
-        self.y = y + self.y_change
-
-        if self.x < 20 or self.x > game.width \
-                or self.y < 20 \
-                or self.y > game.height \
-                or [self.x, self.y] in self.position:
-            game.crash = True
-        eat(self, food, game)
-        if self.eaten:
-            self.position.append([self.x, self.y])
-            self.eaten = False
-            self.food = self.food + 1
-
-        self.update_position(self.x, self.y)
-
-    def do_move2(self, move, x, y, game, food):
         move_array = [self.x_change, self.y_change]
         done = True
 
@@ -328,9 +277,9 @@ class Player(object):
         self.x = x + self.x_change
         self.y = y + self.y_change
 
-        if self.x < 20 or self.x > game.width \
-                or self.y < 20 \
-                or self.y > game.height \
+        if self.x < 0 or self.x > game.width-20 \
+                or self.y < 0 \
+                or self.y > game.height-20 \
                 or [self.x, self.y] in self.position:
             game.crash = True
         eat(self, food, game)
@@ -370,23 +319,20 @@ def get_record(score, record):
 
 
 def display_score(game, score, record):
-    #myfont = pygame.font.SysFont('Segoe UI', 20)
-    #myfont_bold = pygame.font.SysFont('Segoe UI', 20, True)
     myfont = pygame.font.SysFont('Arial', 20)
     myfont_bold = pygame.font.SysFont('Arial', 20, True)
-    text_score = myfont.render('SCORE: ', True, black)
-    text_score_number = myfont.render(str(score), True, black)
-    text_highest = myfont.render('HIGH SCORE: ', True, black)
-    text_highest_number = myfont_bold.render(str(record), True, black)
+    text_score = myfont.render('SCORE: ', True, white)
+    text_score_number = myfont.render(str(score), True, white)
+    text_highest = myfont.render('HIGH SCORE: ', True, white)
+    text_highest_number = myfont_bold.render(str(record), True, white)
     game.gameDisplay.blit(text_score, (10, 10))
     game.gameDisplay.blit(text_score_number, (90, 10))
     game.gameDisplay.blit(text_highest, (10, 35))
     game.gameDisplay.blit(text_highest_number, (130, 35))
-    #game.gameDisplay.blit(game.bg, (10, 10))
 
 
 def display(player, food, game, record):
-    game.gameDisplay.fill(white)
+    game.gameDisplay.fill(black)
     display_score(game, game.score, record)
     player.display_player(player.position[-1][0], player.position[-1][1], player.food, game)
     food.display_food(food.x_food, food.y_food, game)
@@ -446,22 +392,4 @@ def run(game, player1, food1, record):
 
     while not game.crash:
         display(player1, food1, game, record)
-
-
-def humanPlay():
-    print('human in snake_app')
-    pygame.init()
-    game, player1, food1, record = initialize()
-    game.human = True
-
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            pygame.quit()
-            quit()
-    # Initialize classes
-    game = Game()
-    player1 = game.player
-    food1 = game.food
-
-    display(player1, food1, game, record)
 

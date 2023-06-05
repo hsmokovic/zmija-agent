@@ -17,7 +17,9 @@ class SnakeAgent:
         self.snakeApp = snakeApp
 
     def start(self):
+        counter = 0
         while(1):
+            counter += 1
             game, player1, food1, record = initialize(self.snakeApp.record)
             while not game.crash:
                 for event in pygame.event.get():
@@ -25,23 +27,24 @@ class SnakeAgent:
                         pygame.quit()
                         quit()
 
-                display(player1, food1, game, record)
                 state = game.get_state()
 
                 actions = ['right', 'up', 'left', 'down']
                 actions.remove(cant[player1.direction])
                 action = actions[randint(0, 2)]
-                print(action)
-                player1.do_move2(action, player1.x, player1.y, game, food1)
+                #print(action)
+                player1.do_move(action, player1.x, player1.y, game, food1)
+
+
+                self.snakeApp.record = get_record(game.score, record)
+                display(player1, food1, game, self.snakeApp.record)
+                #print(player1.direction)
 
                 state = game.get_state()
-
-                #print(player1.direction)
                 game.dont_burn_my_cpu.tick(config['maxfps'])
                 #time.sleep(2)
 
-            self.snakeApp.record = get_record(game.score, record)
-            print('score = ', game.score)
+            print(f'{counter}. score={game.score}')
 
 
 class HumanPlay:
@@ -51,53 +54,28 @@ class HumanPlay:
     def play(self):
         pygame.display.set_caption("Keyboard_Input")
         game, player1, food1, record = initialize()
+        action = 'right'
         while not game.crash:
-            print('human')
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     pygame.quit()
                     quit()
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_LEFT:
-                        #print('left')
                         action = 'left'
-                        player1.do_move2(action, player1.x, player1.y, game, food1)
-                    if event.key == pygame.K_UP:
-                        #print('up')
+                    elif event.key == pygame.K_UP:
                         action = 'up'
-                        player1.do_move(action, player1.x, player1.y, game, food1)
-                    if event.key == pygame.K_RIGHT:
-                        #print('right')
+                    elif event.key == pygame.K_RIGHT:
                         action = 'right'
-                        player1.do_move(action, player1.x, player1.y, game, food1)
-                    if event.key == pygame.K_DOWN:
-                        #print('down')
+                    elif event.key == pygame.K_DOWN:
                         action = 'down'
-                        player1.do_move(action, player1.x, player1.y, game, food1)
-                #else:
 
 
-                display(player1, food1, game, record)
+            player1.do_move(action, player1.x, player1.y, game, food1)
+            self.snakeApp.record = get_record(game.score, record)
+            display(player1, food1, game, self.snakeApp.record)
 
-            # key_input = pygame.key.get_pressed()
-            # if key_input[pygame.K_LEFT]:
-            #     print('left')
-            #     action = [1, 0, 0]
-            #     player1.do_move(action, player1.x, player1.y, game, food1)
-            # if key_input[pygame.K_UP]:
-            #     print('up')
-            #     action = [0, 1, 0]
-            #     player1.do_move(action, player1.x, player1.y, game, food1)
-            # if key_input[pygame.K_RIGHT]:
-            #     print('right')
-            #     action = [0, 1, 0]
-            #     player1.do_move(action, player1.x, player1.y, game, food1)
-            # if key_input[pygame.K_DOWN]:
-            #     print('down')
-            #     action = [0, 1, 0]
-            #     player1.do_move(action, player1.x, player1.y, game, food1)
-
-            time.sleep(0.5)
+            game.dont_burn_my_cpu.tick(config['playfps'])
 
 
 
