@@ -22,6 +22,7 @@ config = {
     'delay': 750,
     'maxfps': 30,
     'playfps': 5,
+    'gui': True
 }
 
 moves = {
@@ -67,8 +68,10 @@ class SnakeApp(object):
             self.draw_text('Main Menu', self.font, white, self.screen, 260, 80)
 
             # kreiranje buttona
-            button_1 = pygame.Rect(200, 140, 200, 50)
-            button_2 = pygame.Rect(200, 220, 200, 50)
+            if config['gui']:
+                button_1 = pygame.Rect(200, 140, 200, 50)
+                button_2 = pygame.Rect(200, 220, 200, 50)
+                button_3 = pygame.Rect(200, 300, 200, 50)
 
             mx, my = pygame.mouse.get_pos()
             if button_1.collidepoint((mx, my)):
@@ -78,32 +81,44 @@ class SnakeApp(object):
 
             if button_2.collidepoint((mx, my)):
                 if self.click:
-                    #()
                     config['human'] = False
                     pygame.event.set_blocked(pygame.MOUSEMOTION)
                     intro = False
+            if button_3.collidepoint((mx, my)):
+                if self.click:
+                    config['human'] = False
+                    config['gui'] = False
+                    pygame.display.quit()
+                    intro = False
 
-            pygame.draw.rect(self.screen, blue, button_1, border_radius=15)
-            pygame.draw.rect(self.screen, blue, button_2, border_radius=15)
+            if config['gui']:
+                pygame.draw.rect(self.screen, blue, button_1, border_radius=15)
+                pygame.draw.rect(self.screen, blue, button_2, border_radius=15)
+                pygame.draw.rect(self.screen, blue, button_3, border_radius=15)
 
-            # writing text on top of button
-            self.draw_text('Play Snake', self.font, white, self.screen, 260, 155)
-            self.draw_text('Train', self.font, white, self.screen, 280, 235)
+
+            if config['gui']:
+                # writing text on top of button
+                self.draw_text('Play Snake', self.font, white, self.screen, 260, 155)
+                self.draw_text('Train', self.font, white, self.screen, 280, 235)
+                self.draw_text('Train - No GUI', self.font, white, self.screen, 250, 315)
 
             self.click = False
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    pygame.quit()
-                    sys.exit()
-                if event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_ESCAPE:
+            if config['gui']:
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
                         pygame.quit()
                         sys.exit()
-                if event.type == pygame.MOUSEBUTTONDOWN:
-                    if event.button == 1:
-                        self.click = True
+                    if event.type == pygame.KEYDOWN:
+                        if event.key == pygame.K_ESCAPE:
+                            pygame.quit()
+                            sys.exit()
+                    if event.type == pygame.MOUSEBUTTONDOWN:
+                        if event.button == 1:
+                            self.click = True
 
-            pygame.display.update()
+            if config['gui']:
+                pygame.display.update()
             self.clock.tick(60)
 
 
@@ -117,16 +132,21 @@ class SnakeApp(object):
 
 class Game(object):
     def __init__(self):
-        pygame.init()
-        pygame.key.set_repeat(250, 25)
-        self.width = config['cell_size']*config['cols']
-        self.height = config['cell_size']*config['rows']
-        self.gameDisplay = pygame.display.set_mode((self.width, self.height))
-        self.gameDisplay.fill(black)
+        self.width = config['cell_size'] * config['cols']
+        self.height = config['cell_size'] * config['rows']
 
-        pygame.display.set_caption('Snake Game')
-        self.font = pygame.font.SysFont('Arial', 20)
-        self.dont_burn_my_cpu = pygame.time.Clock()
+        if config['gui']:
+            pygame.init()
+            pygame.key.set_repeat(250, 25)
+            self.gameDisplay = pygame.display.set_mode((self.width, self.height))
+            self.gameDisplay.fill(black)
+            pygame.display.set_caption('Snake Game')
+            self.font = pygame.font.SysFont('Arial', 20)
+            self.dont_burn_my_cpu = pygame.time.Clock()
+
+
+
+
 
         self.actions = []
         self.needs_actions = True
@@ -197,7 +217,8 @@ class Food(object):
         #self.y_food = 0
         #self.x_food = x_rand - x_rand % 20
         #self.y_food = 0.5 * self.height
-        self.image = pygame.image.load('img/food.png')
+        if config['gui']:
+            self.image = pygame.image.load('img/food.png')
 
     def food_coord(self, game, player):
         x_rand = randint(0, game.width)
@@ -225,7 +246,8 @@ class Player(object):
         self.position.append([self.x, self.y])
         self.food = 1
         self.eaten = False
-        self.image = pygame.image.load('img/snake.png')
+        if config['gui']:
+            self.image = pygame.image.load('img/snake.png')
         self.x_change = 20
         self.y_change = 0
         self.direction = 'right'
@@ -393,7 +415,8 @@ def display(player, food, game, record):
     display_score(game, game.score, record)
     player.display_player(player.position[-1][0], player.position[-1][1], player.food, game)
     food.display_food(food.x_food, food.y_food, game)
-    update_screen()
+    #update_screen()
+    pygame.display.update()
 
 
 def update_screen():
@@ -411,7 +434,8 @@ def initialize_game(player, game, food, agent, batch_size, is_train):
         agent.replay_mem(agent.memory, batch_size)
 
 def initialize(record=0):
-    pygame.init()
+    if config['gui']:
+        pygame.init()
     if record == 0:
         record = 0
     else:
@@ -420,36 +444,6 @@ def initialize(record=0):
     player1 = game.player
     food1 = game.food
     return game, player1, food1, record
-
-def run(game, player1, food1, record):
-    # pygame.init()
-    # record = 0
-    # game = Game()
-    # player1 = game.player
-    # food1 = game.food
-    print('run')
-
-    while not game.crash:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                quit()
-
-        # Initialize classes
-
-        display(player1, food1, game, record)
-
-        state = game.get_state()
-        action = [1, 0, 0]
-        player1.do_move(action, player1.x, player1.y, game, food1)
-        state = game.get_state()
-
-        game.dont_burn_my_cpu.tick(config['maxfps'])
-        #time.sleep(0.5)
-
-    while not game.crash:
-        display(player1, food1, game, record)
-
 
 
 

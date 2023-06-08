@@ -1,11 +1,11 @@
 import argparse
-import distutils.util
-from snake_app import SnakeApp, run, Player, initialize, get_record, display, config, danger, distance2
+from snake_app import SnakeApp, Player, initialize, get_record, display, config, danger, distance2
 from random import randint
 import pygame
 import time
 import numpy as np
 from neural_network import NeuralNetwork
+import logging
 
 cant = {
     'down': 'up',
@@ -18,6 +18,7 @@ class SnakeAgent:
     def __init__(self, snakeApp: SnakeApp):
         self.snakeApp = snakeApp
         self.generation_id = 1
+        self.generation_size = 50
         self.best_fitness = (0, self.generation_id)
         self.current_id = 0
         self.current_run = 0
@@ -25,37 +26,54 @@ class SnakeAgent:
         self.runs_per_chromosome = 3
 
     def start(self):
-        counter = 0
+        population = []
+        for i in range(self.generation_size):
+            population.append(NeuralNetwork())
+
         while(1):
-            counter += 1
-            game, player1, food1, record = initialize(self.snakeApp.record)
-            while not game.crash:
+            logging.info(f'Generation: {self.generation_id}')
+            for neural_network in population:
+                while self.current_run != self.runs_per_chromosome:
+                    self.play_game()
+
+                    self.current_run += 1
+
+                self.current_id += 1
+                self.current_run = 0
+                self.current_run_score_sum = 0
+
+            # stvori novu populaciju
+            self.generation_id +=1
+
+    def play_game(self):
+        # inicijalizacije nove igre
+        game, player1, food1, record = initialize(self.snakeApp.record)
+        while not game.crash:
+            if config['gui']:
                 for event in pygame.event.get():
                     if event.type == pygame.QUIT:
                         pygame.quit()
                         quit()
 
-                state = game.get_state()
+            state = game.get_state()
 
-                # actions = ['right', 'up', 'left', 'down']
-                # actions.remove(cant[player1.direction])
-                # action = actions[randint(0, 2)]
-                # print(action)
-                actions = [[1, 0, 0], [0, 1, 0], [0, 0, 1]]
-                action = actions[randint(0, 2)]
-                danger(player1, game, action)
-                player1.move_ai(action, player1.x, player1.y, game, food1)
+            actions = [[1, 0, 0], [0, 1, 0], [0, 0, 1]]
+            action = actions[randint(0, 2)]
+            danger(player1, game, action)
+            player1.move_ai(action, player1.x, player1.y, game, food1)
 
-                self.snakeApp.record = get_record(game.score, record)
+            self.snakeApp.record = get_record(game.score, record)
+            if config['gui']:
                 display(player1, food1, game, self.snakeApp.record)
-                #print(player1.direction)
+            # print(player1.direction)
 
-                state = game.get_state()
+            state = game.get_state()
 
+            if config['gui']:
                 game.dont_burn_my_cpu.tick(config['maxfps'])
-                #time.sleep(2)
-
-            print(f'{counter}. score={game.score}')
+            # time.sleep(2)
+        print(f'score = {game.score}')
+        self.current_run_score_sum += game.score
 
 
 class HumanPlay:
@@ -81,24 +99,10 @@ class HumanPlay:
                     elif event.key == pygame.K_DOWN:
                         action = 'down'
 
-            # danger(player1, game, 'left')
-            # danger(player1, game, 'right')
-            # danger(player1, game, 'forward')
             player1.move_human(action, player1.x, player1.y, game, food1)
-            state = game.get_state()
-            #print('POSITION: ', state['position'])
-            #distance(player1, food1)
-            # distance2(player1, food1, 'left')
-            # distance2(player1, food1, 'right')
-            # distance2(player1, food1, 'forward')
-            # print()
-            # print()
-
             self.snakeApp.record = get_record(game.score, record)
             display(player1, food1, game, self.snakeApp.record)
-
             game.dont_burn_my_cpu.tick(config['playfps'])
-
 
 
 if __name__ == '__main__':
