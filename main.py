@@ -1,9 +1,11 @@
 import argparse
 import distutils.util
-from snake_app import SnakeApp, run, Player, initialize, get_record, display, config
+from snake_app import SnakeApp, run, Player, initialize, get_record, display, config, danger, distance2
 from random import randint
 import pygame
 import time
+import numpy as np
+from neural_network import NeuralNetwork
 
 cant = {
     'down': 'up',
@@ -15,6 +17,12 @@ cant = {
 class SnakeAgent:
     def __init__(self, snakeApp: SnakeApp):
         self.snakeApp = snakeApp
+        self.generation_id = 1
+        self.best_fitness = (0, self.generation_id)
+        self.current_id = 0
+        self.current_run = 0
+        self.current_run_score_sum = 0
+        self.runs_per_chromosome = 3
 
     def start(self):
         counter = 0
@@ -29,18 +37,21 @@ class SnakeAgent:
 
                 state = game.get_state()
 
-                actions = ['right', 'up', 'left', 'down']
-                actions.remove(cant[player1.direction])
+                # actions = ['right', 'up', 'left', 'down']
+                # actions.remove(cant[player1.direction])
+                # action = actions[randint(0, 2)]
+                # print(action)
+                actions = [[1, 0, 0], [0, 1, 0], [0, 0, 1]]
                 action = actions[randint(0, 2)]
-                #print(action)
-                player1.do_move(action, player1.x, player1.y, game, food1)
-
+                danger(player1, game, action)
+                player1.move_ai(action, player1.x, player1.y, game, food1)
 
                 self.snakeApp.record = get_record(game.score, record)
                 display(player1, food1, game, self.snakeApp.record)
                 #print(player1.direction)
 
                 state = game.get_state()
+
                 game.dont_burn_my_cpu.tick(config['maxfps'])
                 #time.sleep(2)
 
@@ -70,8 +81,19 @@ class HumanPlay:
                     elif event.key == pygame.K_DOWN:
                         action = 'down'
 
+            # danger(player1, game, 'left')
+            # danger(player1, game, 'right')
+            # danger(player1, game, 'forward')
+            player1.move_human(action, player1.x, player1.y, game, food1)
+            state = game.get_state()
+            #print('POSITION: ', state['position'])
+            #distance(player1, food1)
+            # distance2(player1, food1, 'left')
+            # distance2(player1, food1, 'right')
+            # distance2(player1, food1, 'forward')
+            # print()
+            # print()
 
-            player1.do_move(action, player1.x, player1.y, game, food1)
             self.snakeApp.record = get_record(game.score, record)
             display(player1, food1, game, self.snakeApp.record)
 
@@ -80,14 +102,7 @@ class HumanPlay:
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--display", nargs='?', type=distutils.util.strtobool, default=True)
-    args = parser.parse_args()
-    print("Args", args)
-    config['display'] = args.display
-
     app = SnakeApp()
-    #print(app.human)
     if config['human']:
         print('HUMAN')
         human = HumanPlay(app)
@@ -96,3 +111,13 @@ if __name__ == '__main__':
         print('AGENT')
         agent = SnakeAgent(app)
         agent.start()
+
+    mreza = NeuralNetwork()
+    # print(mreza.weights)
+    # print(mreza.bias)
+    #
+    # population = []
+    # population.append(NeuralNetwork())
+    # population.append(NeuralNetwork())
+    # print(population[0].weights)
+

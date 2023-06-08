@@ -3,6 +3,7 @@ import sys
 import time
 import numpy as np
 from random import randint
+from scipy.spatial import distance as d
 
 '''
 Tipke za upravljanje:
@@ -20,7 +21,13 @@ config = {
     'rows': 30,
     'delay': 750,
     'maxfps': 30,
-    'playfps': 5
+    'playfps': 5,
+}
+
+moves = {
+    'left': [0, 0, 1],
+    'right': [0, 1, 0],
+    'forward': [1, 0, 0]
 }
 
 black = (0, 0, 0)
@@ -184,10 +191,12 @@ class Food(object):
         self.height = config['cell_size'] * config['rows']
         x_rand = randint(0, self.width)
         y_rand = randint(0, self.height)
-        # self.x_food = x_rand - x_rand % 20
-        # self.y_food = y_rand - y_rand % 20
         self.x_food = x_rand - x_rand % 20
-        self.y_food = 0.5 * self.height
+        self.y_food = y_rand - y_rand % 20
+        #self.x_food = 580
+        #self.y_food = 0
+        #self.x_food = x_rand - x_rand % 20
+        #self.y_food = 0.5 * self.height
         self.image = pygame.image.load('img/food.png')
 
     def food_coord(self, game, player):
@@ -229,8 +238,37 @@ class Player(object):
             self.position[-1][0] = x
             self.position[-1][1] = y
 
+    def move_ai(self, move, x, y, game, food):
+        move_array = [self.x_change, self.y_change]
 
-    def do_move(self, move, x, y, game, food):
+        if np.array_equal(move, [1, 0, 0]):
+            move_array = self.x_change, self.y_change
+        elif np.array_equal(move, [0, 1, 0]) and self.y_change == 0:  # right - going horizontal
+            move_array = [0, self.x_change]
+        elif np.array_equal(move, [0, 1, 0]) and self.x_change == 0:  # right - going vertical
+            move_array = [-self.y_change, 0]
+        elif np.array_equal(move, [0, 0, 1]) and self.y_change == 0:  # left - going horizontal
+            move_array = [0, -self.x_change]
+        elif np.array_equal(move, [0, 0, 1]) and self.x_change == 0:  # left - going vertical
+            move_array = [self.y_change, 0]
+        self.x_change, self.y_change = move_array
+        self.x = x + self.x_change
+        self.y = y + self.y_change
+        if self.x < 0 or self.x > game.width - 20 \
+                or self.y < 0 \
+                or self.y > game.height - 20 \
+                or [self.x, self.y] in self.position:
+            game.crash = True
+        eat(self, food, game)
+        if self.eaten:
+            self.position.append([self.x, self.y])
+            self.eaten = False
+            self.food = self.food + 1
+
+        self.update_position(self.x, self.y)
+
+
+    def move_human(self, move, x, y, game, food):
         move_array = [self.x_change, self.y_change]
         done = True
 
@@ -277,9 +315,9 @@ class Player(object):
         self.x = x + self.x_change
         self.y = y + self.y_change
 
-        if self.x < 0 or self.x > game.width-20 \
+        if self.x < 0 or self.x > game.width - 20 \
                 or self.y < 0 \
-                or self.y > game.height-20 \
+                or self.y > game.height - 20 \
                 or [self.x, self.y] in self.position:
             game.crash = True
         eat(self, food, game)
@@ -300,6 +338,25 @@ class Player(object):
                 game.gameDisplay.blit(self.image, (x_temp, y_temp))
         else:
             pygame.time.wait(300)
+
+    def predict_position(self, move, x, y):
+        move_array = [self.x_change, self.y_change]
+
+        if np.array_equal(move, [1, 0, 0]):
+            move_array = self.x_change, self.y_change
+        elif np.array_equal(move, [0, 1, 0]) and self.y_change == 0:  # right - going horizontal
+            move_array = [0, self.x_change]
+        elif np.array_equal(move, [0, 1, 0]) and self.x_change == 0:  # right - going vertical
+            move_array = [-self.y_change, 0]
+        elif np.array_equal(move, [0, 0, 1]) and self.y_change == 0:  # left - going horizontal
+            move_array = [0, -self.x_change]
+        elif np.array_equal(move, [0, 0, 1]) and self.x_change == 0:  # left - going vertical
+            move_array = [self.y_change, 0]
+        x_change, y_change = move_array
+        new_x = x + x_change
+        new_y = y + y_change
+
+        return [new_x, new_y]
 
 
 
@@ -393,3 +450,27 @@ def run(game, player1, food1, record):
     while not game.crash:
         display(player1, food1, game, record)
 
+
+
+
+def danger(player, game, action):
+    danger = False
+    new_position = player.predict_position(action, player.x, player.y)
+    # ako je zid s where strane od zmijine glave
+    if new_position[0] < 0 or new_position[0] > game.width-20 or new_position[1] < 0 or new_position[1] > game.height-20:
+        danger = True
+        print(f'DANGER_zid')
+    # ako je tijelo zmije s where strane od zmijine glave
+    if new_position in player.position:
+        danger = True
+        print(f'DANGER_zmija')
+
+    return danger
+
+
+def distance2(player, food, where):
+    food_cord = np.array((food.x_food, food.y_food))
+    new_head = player.predict_position(moves[where], player.x, player.y)
+    head_cord = np.array(new_head)
+    dist = np.linalg.norm(food_cord - head_cord)
+    return dist
