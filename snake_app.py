@@ -145,9 +145,6 @@ class Game(object):
             self.dont_burn_my_cpu = pygame.time.Clock()
 
 
-
-
-
         self.actions = []
         self.needs_actions = True
 
@@ -157,43 +154,6 @@ class Game(object):
         self.score = 0
         self.human = True
 
-        #self.init_game()
-
-        #pygame.display.flip()
-        #pygame.display.update()
-        #self.clock.tick(60)
-
-    # pokrece igru
-    # def init(self):
-    #     # upravljanje preko tipkovnice
-    #     self.key_actions = {
-    #         'ESCAPE': self.quit,
-    #         'LEFT': lambda: self.move(0),
-    #         'RIGHT': lambda: self.move(1),
-    #         'UP': lambda: self.move(2),
-    #         'DOWN': lambda: self.move(3),
-    #         'p': self.pause,
-    #         'SPACE': self.start_game
-    #     }
-    #
-    #     self.crash = False
-    #     self.paused = False
-    #
-    #     # timer ?
-    #     pygame.time.set_timer(pygame.USEREVENT + 1, config['delay'])
-    #     self.clock = pygame.time.Clock()
-    #
-    # def init_game(self):
-    #     self.score = 0
-    #     return
-    #
-    # def start_game(self):
-    #     print('start')
-    #     if self.crash:
-    #         self.game = Game()
-    #         self.score = 0
-    #         #self.init_game()
-    #         self.crash = False
 
     def get_state(self):
         return {"position": np.copy(self.player.position),
@@ -213,10 +173,6 @@ class Food(object):
         y_rand = randint(0, self.height)
         self.x_food = x_rand - x_rand % 20
         self.y_food = y_rand - y_rand % 20
-        #self.x_food = 580
-        #self.y_food = 0
-        #self.x_food = x_rand - x_rand % 20
-        #self.y_food = 0.5 * self.height
         if config['gui']:
             self.image = pygame.image.load('img/food.png')
 
@@ -381,8 +337,6 @@ class Player(object):
         return [new_x, new_y]
 
 
-
-
 def eat(player, food, game):
     if player.x == food.x_food and player.y == food.y_food:
         food.food_coord(game, player)
@@ -415,13 +369,8 @@ def display(player, food, game, record):
     display_score(game, game.score, record)
     player.display_player(player.position[-1][0], player.position[-1][1], player.food, game)
     food.display_food(food.x_food, food.y_food, game)
-    #update_screen()
     pygame.display.update()
 
-
-def update_screen():
-    pygame.display.update()
-    # pygame.event.get() # <--- Add this line (for MAC users) if having problems with UI ###
 
 def initialize_game(player, game, food, agent, batch_size, is_train):
     state_init1 = agent.get_state(game, player, food)  # [0 0 0 0 0 0 0 0 0 1 0 0 0 1 0 0]

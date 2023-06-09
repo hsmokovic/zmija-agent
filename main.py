@@ -1,5 +1,6 @@
 import argparse
 from snake_app import SnakeApp, Player, initialize, get_record, display, config, danger, distance2
+from neural_network import selection, crossover
 from random import randint
 import pygame
 import time
@@ -31,13 +32,15 @@ class SnakeAgent:
             population.append(NeuralNetwork())
 
         while(1):
-            logging.info(f'Generation: {self.generation_id}')
+            print(f'Generation: {self.generation_id}, record: {self.snakeApp.record}')
+            print(population)
+            selection(population)
             for neural_network in population:
                 while self.current_run != self.runs_per_chromosome:
                     self.play_game()
 
                     self.current_run += 1
-
+                #print('curent run sum = ', self.current_run_score_sum)
                 self.current_id += 1
                 self.current_run = 0
                 self.current_run_score_sum = 0
@@ -59,7 +62,7 @@ class SnakeAgent:
 
             actions = [[1, 0, 0], [0, 1, 0], [0, 0, 1]]
             action = actions[randint(0, 2)]
-            danger(player1, game, action)
+            #danger(player1, game, action)
             player1.move_ai(action, player1.x, player1.y, game, food1)
 
             self.snakeApp.record = get_record(game.score, record)
@@ -71,8 +74,8 @@ class SnakeAgent:
 
             if config['gui']:
                 game.dont_burn_my_cpu.tick(config['maxfps'])
-            # time.sleep(2)
-        print(f'score = {game.score}')
+            #time.sleep(0.1)
+        #print(f'score = {game.score}')
         self.current_run_score_sum += game.score
 
 
@@ -116,12 +119,14 @@ if __name__ == '__main__':
         agent = SnakeAgent(app)
         agent.start()
 
-    mreza = NeuralNetwork()
-    # print(mreza.weights)
-    # print(mreza.bias)
-    #
-    # population = []
-    # population.append(NeuralNetwork())
-    # population.append(NeuralNetwork())
-    # print(population[0].weights)
+    mama = NeuralNetwork()
+    print(mama.weights)
+    print(mama.bias)
 
+    tata = NeuralNetwork()
+    print(tata.weights)
+    print(tata.bias)
+
+    matej = crossover(mama, tata)
+    print(matej.weights)
+    print(matej.bias)
