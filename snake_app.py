@@ -3,7 +3,6 @@ import sys
 import time
 import numpy as np
 from random import randint
-from scipy.spatial import distance as d
 
 '''
 Tipke za upravljanje:
@@ -30,6 +29,8 @@ moves = {
     'right': [0, 1, 0],
     'forward': [1, 0, 0]
 }
+
+actions = [[0, 0, 1], [0, 1, 0], [1, 0, 0]]
 
 black = (0, 0, 0)
 white = (255, 255, 255)
@@ -72,6 +73,7 @@ class SnakeApp(object):
                 button_1 = pygame.Rect(200, 140, 200, 50)
                 button_2 = pygame.Rect(200, 220, 200, 50)
                 button_3 = pygame.Rect(200, 300, 200, 50)
+                #button_3 = pygame.Rect(200, 260, 200, 50)
 
             mx, my = pygame.mouse.get_pos()
             if button_1.collidepoint((mx, my)):
@@ -395,25 +397,42 @@ def initialize(record=0):
     return game, player1, food1, record
 
 
-
-def danger(player, game, action):
+def is_danger(player, game, action):
     danger = False
     new_position = player.predict_position(action, player.x, player.y)
     # ako je zid s where strane od zmijine glave
     if new_position[0] < 0 or new_position[0] > game.width-20 or new_position[1] < 0 or new_position[1] > game.height-20:
         danger = True
-        print(f'DANGER_zid')
     # ako je tijelo zmije s where strane od zmijine glave
     if new_position in player.position:
         danger = True
-        print(f'DANGER_zmija')
-
     return danger
 
 
-def distance2(player, food, where):
+def distance(player, food, action):
     food_cord = np.array((food.x_food, food.y_food))
-    new_head = player.predict_position(moves[where], player.x, player.y)
+    new_head = player.predict_position(action, player.x, player.y)
     head_cord = np.array(new_head)
     dist = np.linalg.norm(food_cord - head_cord)
     return dist
+
+
+def generate_network_input(player, food, game):
+    # redom: lijevo, desno, ravno
+    network_input = np.zeros(6)
+    counter = 0
+    for action in actions:
+        danger = is_danger(player, game, action)
+        dist = distance(player, food, action)
+        network_input[counter] = int(danger)
+        network_input[counter+3] = dist
+        counter += 1
+    return network_input
+
+def max_index(output):
+    ind, max = 0, output[0]
+    for i in range(len(output)):
+        if output[i] > max:
+            max = output[i]
+            ind = i
+    return ind

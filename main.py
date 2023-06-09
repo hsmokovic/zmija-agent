@@ -1,12 +1,11 @@
-import argparse
-from snake_app import SnakeApp, Player, initialize, get_record, display, config, danger, distance2
-from neural_network import selection, crossover
-from random import randint
 import pygame
 import time
 import numpy as np
-from neural_network import NeuralNetwork
 import logging
+from snake_app import SnakeApp, Player, initialize, get_record, display, config, is_danger, distance, generate_network_input
+from neural_network import elitism, selection, crossover
+from random import randint
+from neural_network import NeuralNetwork
 
 cant = {
     'down': 'up',
@@ -33,24 +32,36 @@ class SnakeAgent:
 
         while(1):
             print(f'Generation: {self.generation_id}, record: {self.snakeApp.record}')
-            print(population)
-            selection(population)
+            #print(population)
+            #selection(population)
             for neural_network in population:
                 while self.current_run != self.runs_per_chromosome:
-                    self.play_game()
-
+                    self.play_game(neural_network)
                     self.current_run += 1
                 #print('curent run sum = ', self.current_run_score_sum)
+                neural_network.fitness = np.round(self.current_run_score_sum/self.runs_per_chromosome, decimals=2)
                 self.current_id += 1
                 self.current_run = 0
                 self.current_run_score_sum = 0
 
             # stvori novu populaciju
-            self.generation_id +=1
+            self.generation_id += 1
+            population.sort(key=lambda x: x.fitness, reverse=True)
+            new_population = elitism(population)
+            parents = set()
+            while len(new_population) < self.generation_size:
+                parent1 = selection(population)
+                parent2 = selection(population)
+                if (parent1, parent2) not in parents:
+                    parents.add((parent1, parent2))
+                    child = crossover(parent1, parent2)
+                    child.mutate()
+                    new_population.append(child)
 
-    def play_game(self):
+    def play_game(self, neural_network):
         # inicijalizacije nove igre
         game, player1, food1, record = initialize(self.snakeApp.record)
+        no_food = 0
         while not game.crash:
             if config['gui']:
                 for event in pygame.event.get():
@@ -58,23 +69,33 @@ class SnakeAgent:
                         pygame.quit()
                         quit()
 
-            state = game.get_state()
+            # actions = [[1, 0, 0], [0, 1, 0], [0, 0, 1]]
+            # action = actions[randint(0, 2)]
+            # is_danger(player1, game, action)
+            # print(distance(player1, food1, action))
 
-            actions = [[1, 0, 0], [0, 1, 0], [0, 0, 1]]
-            action = actions[randint(0, 2)]
-            #danger(player1, game, action)
+            state1 = game.get_state()
+            network_input = generate_network_input(player1, food1, game)
+            #print(network_input)
+            action = neural_network.forwad_propagation(network_input)
+            #print(action)
             player1.move_ai(action, player1.x, player1.y, game, food1)
+            state2 = game.get_state()
+
+            if state2['score'] > state1['score']:
+                no_food = 0
+            else:
+                no_food += 1
+
+            if no_food == 50:
+                game.crash = True
 
             self.snakeApp.record = get_record(game.score, record)
             if config['gui']:
                 display(player1, food1, game, self.snakeApp.record)
-            # print(player1.direction)
-
-            state = game.get_state()
-
-            if config['gui']:
                 game.dont_burn_my_cpu.tick(config['maxfps'])
-            #time.sleep(0.1)
+                #time.sleep(1)
+
         #print(f'score = {game.score}')
         self.current_run_score_sum += game.score
 
@@ -119,14 +140,14 @@ if __name__ == '__main__':
         agent = SnakeAgent(app)
         agent.start()
 
-    mama = NeuralNetwork()
-    print(mama.weights)
-    print(mama.bias)
-
-    tata = NeuralNetwork()
-    print(tata.weights)
-    print(tata.bias)
-
-    matej = crossover(mama, tata)
-    print(matej.weights)
-    print(matej.bias)
+    # mama = NeuralNetwork()
+    # print(mama.weights)
+    # print(mama.bias)
+    #
+    # tata = NeuralNetwork()
+    # print(tata.weights)
+    # print(tata.bias)
+    #
+    # matej = crossover(mama, tata)
+    # print(matej.weights)
+    # print(matej.bias)
