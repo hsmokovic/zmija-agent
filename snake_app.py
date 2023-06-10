@@ -16,8 +16,8 @@ P - pauziranje igre
 
 config = {
     'cell_size': 20,
-    'cols': 30,
-    'rows': 30,
+    'cols': 15,
+    'rows': 15,
     'delay': 750,
     'maxfps': 30,
     'playfps': 5,
@@ -72,8 +72,8 @@ class SnakeApp(object):
             if config['gui']:
                 button_1 = pygame.Rect(200, 140, 200, 50)
                 button_2 = pygame.Rect(200, 220, 200, 50)
-                button_3 = pygame.Rect(200, 300, 200, 50)
-                #button_3 = pygame.Rect(200, 260, 200, 50)
+                #button_3 = pygame.Rect(200, 300, 200, 50)
+                button_3 = pygame.Rect(200, 260, 200, 50)
 
             mx, my = pygame.mouse.get_pos()
             if button_1.collidepoint((mx, my)):

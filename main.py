@@ -23,7 +23,7 @@ class SnakeAgent:
         self.current_id = 0
         self.current_run = 0
         self.current_run_score_sum = 0
-        self.runs_per_chromosome = 3
+        self.runs_per_chromosome = 1
 
     def start(self):
         population = []
@@ -31,7 +31,7 @@ class SnakeAgent:
             population.append(NeuralNetwork())
 
         while(1):
-            print(f'Generation: {self.generation_id}, record: {self.snakeApp.record}')
+            #print(f'Generation: {self.generation_id}, record: {self.snakeApp.record}')
             #print(population)
             #selection(population)
             for neural_network in population:
@@ -44,9 +44,13 @@ class SnakeAgent:
                 self.current_run = 0
                 self.current_run_score_sum = 0
 
+            population.sort(key=lambda x: x.fitness, reverse=True)
+            if population[0].fitness > self.best_fitness[0]:
+                self.best_fitness = (population[0].fitness, self.generation_id)
+            print(f'Generation: {self.generation_id}, best fitness: {self.best_fitness}, record: {self.snakeApp.record}')
+
             # stvori novu populaciju
             self.generation_id += 1
-            population.sort(key=lambda x: x.fitness, reverse=True)
             new_population = elitism(population)
             parents = set()
             while len(new_population) < self.generation_size:
@@ -57,6 +61,8 @@ class SnakeAgent:
                     child = crossover(parent1, parent2)
                     child.mutate()
                     new_population.append(child)
+
+            population = new_population.copy()
 
     def play_game(self, neural_network):
         # inicijalizacije nove igre
@@ -87,7 +93,7 @@ class SnakeAgent:
             else:
                 no_food += 1
 
-            if no_food == 50:
+            if no_food == 100:
                 game.crash = True
 
             self.snakeApp.record = get_record(game.score, record)

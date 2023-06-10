@@ -61,7 +61,7 @@ class NeuralNetwork:
 
         # mutacija biasa
         for i in range(len(self.bias)):
-            bias = self.weights[i]
+            bias = self.bias[i]
             for j in range(bias.shape[0]):
                 # ako je random vr. manja od zadane vjerojatnosti mutation_prob -> mutacija
                 if np.random.uniform(0, 1) < neural['mutation_prob']:
