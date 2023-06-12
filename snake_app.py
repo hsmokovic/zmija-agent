@@ -1,23 +1,13 @@
 import pygame
 import sys
-import time
 import numpy as np
 from random import randint
 
-'''
-Tipke za upravljanje:
-Left - kretanje lijevo
-Right - kretanje desno
-Up - kretanje gore
-Down - kretanje dolje
-Escape - izlaz iz igre
-P - pauziranje igre
-'''
 
 config = {
     'cell_size': 20,
-    'cols': 15,
-    'rows': 15,
+    'cols': 30,
+    'rows': 30,
     'delay': 750,
     'maxfps': 30,
     'playfps': 5,
@@ -48,18 +38,12 @@ class SnakeApp(object):
 
         self.screen = pygame.display.set_mode((self.width, self.height))
         pygame.display.set_caption('Snake Game')
-        self.font = pygame.font.SysFont('Arial', 20)
+        self.font = pygame.font.SysFont('Arial', 20, True)
         self.click = False
         self.clock = pygame.time.Clock()
         self.record = 0
-
-        #self.actions = []
-        #self.needs_actions = True
-
-        #self.init_game()
         self.main_menu()
         self.human = False
-
 
     def main_menu(self):
         intro = True
@@ -72,8 +56,7 @@ class SnakeApp(object):
             if config['gui']:
                 button_1 = pygame.Rect(200, 140, 200, 50)
                 button_2 = pygame.Rect(200, 220, 200, 50)
-                #button_3 = pygame.Rect(200, 300, 200, 50)
-                button_3 = pygame.Rect(200, 260, 200, 50)
+                button_3 = pygame.Rect(200, 300, 200, 50)
 
             mx, my = pygame.mouse.get_pos()
             if button_1.collidepoint((mx, my)):
@@ -97,7 +80,6 @@ class SnakeApp(object):
                 pygame.draw.rect(self.screen, blue, button_1, border_radius=15)
                 pygame.draw.rect(self.screen, blue, button_2, border_radius=15)
                 pygame.draw.rect(self.screen, blue, button_3, border_radius=15)
-
 
             if config['gui']:
                 # writing text on top of button
@@ -123,13 +105,11 @@ class SnakeApp(object):
                 pygame.display.update()
             self.clock.tick(60)
 
-
     def draw_text(self, text, font, color, surface, x, y):
         textobj = font.render(text, 1, color)
         textrect = textobj.get_rect()
         textrect.topleft = (x, y)
         surface.blit(textobj, textrect)
-
 
 
 class Game(object):
@@ -143,9 +123,8 @@ class Game(object):
             self.gameDisplay = pygame.display.set_mode((self.width, self.height))
             self.gameDisplay.fill(black)
             pygame.display.set_caption('Snake Game')
-            self.font = pygame.font.SysFont('Arial', 20)
+            self.font = pygame.font.SysFont('Arial', 20, True)
             self.dont_burn_my_cpu = pygame.time.Clock()
-
 
         self.actions = []
         self.needs_actions = True
@@ -156,7 +135,6 @@ class Game(object):
         self.score = 0
         self.human = True
 
-
     def get_state(self):
         return {"position": np.copy(self.player.position),
                 "food_x": self.food.x_food,
@@ -164,7 +142,6 @@ class Game(object):
                 "score": self.score,
                 "crash": self.crash,
                 "needs_actions": self.needs_actions}
-
 
 
 class Food(object):
@@ -190,8 +167,6 @@ class Food(object):
 
     def display_food(self, x, y, game):
         game.gameDisplay.blit(self.image, (x, y))
-
-
 
 
 class Player(object):
@@ -246,7 +221,6 @@ class Player(object):
             self.food = self.food + 1
 
         self.update_position(self.x, self.y)
-
 
     def move_human(self, move, x, y, game, food):
         move_array = [self.x_change, self.y_change]
@@ -354,12 +328,11 @@ def get_record(score, record):
 
 
 def display_score(game, score, record):
-    myfont = pygame.font.SysFont('Arial', 20)
-    myfont_bold = pygame.font.SysFont('Arial', 20, True)
+    myfont = pygame.font.SysFont('Arial', 20, True)
     text_score = myfont.render('SCORE: ', True, white)
     text_score_number = myfont.render(str(score), True, white)
     text_highest = myfont.render('HIGH SCORE: ', True, white)
-    text_highest_number = myfont_bold.render(str(record), True, white)
+    text_highest_number = myfont.render(str(record), True, white)
     game.gameDisplay.blit(text_score, (10, 10))
     game.gameDisplay.blit(text_score_number, (90, 10))
     game.gameDisplay.blit(text_highest, (10, 35))
@@ -383,6 +356,7 @@ def initialize_game(player, game, food, agent, batch_size, is_train):
     if is_train:
         agent.remember(state_init1, action, reward1, state_init2, game.crash)
         agent.replay_mem(agent.memory, batch_size)
+
 
 def initialize(record=0):
     if config['gui']:
@@ -428,6 +402,7 @@ def generate_network_input(player, food, game):
         network_input[counter+3] = dist
         counter += 1
     return network_input
+
 
 def max_index(output):
     ind, max = 0, output[0]

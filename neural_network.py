@@ -1,13 +1,15 @@
-from snake_app import config, actions, max_index
+from snake_app import actions, max_index
 import numpy as np
 import random
+# import warnings
+# warnings.filterwarnings("error")
 
 neural = {
     'architecture': [6, 20, 3],
     'mutation_prob': 0.1,
     'K': 0.2,
     'elitism': 5,
-    'generation_size': 50
+    'generation_size': 100
 }
 
 class NeuralNetwork:
@@ -22,12 +24,12 @@ class NeuralNetwork:
                 input_size = neural['architecture'][i]
                 output_size = neural['architecture'][i + 1]
                 # parametri su: loc(mean)=0, scale(std_deviation)=0.01, size
-                norm1 = np.random.normal(0, 0.1, (output_size, input_size))
+                norm1 = np.random.normal(0, 0.2, (output_size, input_size))
                 self.weights.append(norm1)
 
             for i in range(1, len(neural['architecture'])):
                 layer_size = neural['architecture'][i]
-                norm2 = np.random.normal(0, 0.1, layer_size)
+                norm2 = np.random.normal(0, 0.2, layer_size)
                 self.bias.append(norm2)
         else:
             self.weights = weights
@@ -37,13 +39,25 @@ class NeuralNetwork:
     def sigmoid(x):
         return 1 / (1 + np.exp(-x))
 
+    # funkcija koja obavlja prolaz kroz mrežu
     def forwad_propagation(self, network_input):
         output = network_input
+        # iteriranje po slojevima neuronske mreže
         for i in range(len(self.weights)):
             weights = self.weights[i]
             bias = self.bias[i]
+            # output sloja je sigmoidalna funkcija od zbroja biasa te umnoška ulaza sloja i težina
             output = self.sigmoid(np.dot(output, weights.T) + bias)
+            # try:
+            #     output = self.sigmoid(np.dot(output, weights.T) + bias)
+            # except RuntimeWarning:
+            #     print('weights = ', weights)
+            #     print('bias = ', bias)
+            #     print('output = ', output)
+            #     breakpoint()
+        # traži se indeks najvećeg elementa izlaza
         ind = max_index(output)
+        # ovisno koji element je najveći odabire se sljedeći potez
         action = actions[ind]
         return action
 

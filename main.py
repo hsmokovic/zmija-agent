@@ -1,10 +1,8 @@
 import pygame
-import time
 import numpy as np
 import logging
-from snake_app import SnakeApp, Player, initialize, get_record, display, config, is_danger, distance, generate_network_input
+from snake_app import SnakeApp, initialize, get_record, display, config, generate_network_input
 from neural_network import elitism, selection, crossover
-from random import randint
 from neural_network import NeuralNetwork
 
 cant = {
@@ -18,12 +16,12 @@ class SnakeAgent:
     def __init__(self, snakeApp: SnakeApp):
         self.snakeApp = snakeApp
         self.generation_id = 1
-        self.generation_size = 50
+        self.generation_size = 100
         self.best_fitness = (0, self.generation_id)
         self.current_id = 0
         self.current_run = 0
         self.current_run_score_sum = 0
-        self.runs_per_chromosome = 1
+        self.runs_per_chromosome = 3
 
     def start(self):
         population = []
@@ -31,14 +29,11 @@ class SnakeAgent:
             population.append(NeuralNetwork())
 
         while(1):
-            #print(f'Generation: {self.generation_id}, record: {self.snakeApp.record}')
-            #print(population)
-            #selection(population)
             for neural_network in population:
                 while self.current_run != self.runs_per_chromosome:
-                    self.play_game(neural_network)
+                    score = self.play_game(neural_network)
+                    self.current_run_score_sum += score
                     self.current_run += 1
-                #print('curent run sum = ', self.current_run_score_sum)
                 neural_network.fitness = np.round(self.current_run_score_sum/self.runs_per_chromosome, decimals=2)
                 self.current_id += 1
                 self.current_run = 0
@@ -47,7 +42,32 @@ class SnakeAgent:
             population.sort(key=lambda x: x.fitness, reverse=True)
             if population[0].fitness > self.best_fitness[0]:
                 self.best_fitness = (population[0].fitness, self.generation_id)
-            print(f'Generation: {self.generation_id}, best fitness: {self.best_fitness}, record: {self.snakeApp.record}')
+            print(f'Generation: {self.generation_id}, gen_best: {population[0].fitness}, best fitness: {self.best_fitness}'
+                  f', record: {self.snakeApp.record}')
+
+            best_five = []
+            for i in range(5):
+                best_five.append(population[i].fitness)
+            five_sum = sum(best_five)
+            file = open("avg.txt", "a")
+            file.write(f'{str(five_sum/5)}\n')
+            file.close()
+
+            if self.generation_id == 500:
+                naucena = population[0]
+                for i in range(200):
+                    score = self.play_game(naucena)
+                    file = open("naucena1.txt", "a")
+                    file.write(f'{str(score)}\n')
+                    file.close()
+            if self.generation_id == 1000:
+                naucena = population[0]
+                for i in range(200):
+                    score = self.play_game(naucena)
+                    file = open("naucena2.txt", "a")
+                    file.write(f'{str(score)}\n')
+                    file.close()
+
 
             # stvori novu populaciju
             self.generation_id += 1
@@ -75,16 +95,9 @@ class SnakeAgent:
                         pygame.quit()
                         quit()
 
-            # actions = [[1, 0, 0], [0, 1, 0], [0, 0, 1]]
-            # action = actions[randint(0, 2)]
-            # is_danger(player1, game, action)
-            # print(distance(player1, food1, action))
-
             state1 = game.get_state()
             network_input = generate_network_input(player1, food1, game)
-            #print(network_input)
             action = neural_network.forwad_propagation(network_input)
-            #print(action)
             player1.move_ai(action, player1.x, player1.y, game, food1)
             state2 = game.get_state()
 
@@ -92,7 +105,6 @@ class SnakeAgent:
                 no_food = 0
             else:
                 no_food += 1
-
             if no_food == 100:
                 game.crash = True
 
@@ -102,8 +114,8 @@ class SnakeAgent:
                 game.dont_burn_my_cpu.tick(config['maxfps'])
                 #time.sleep(1)
 
-        #print(f'score = {game.score}')
-        self.current_run_score_sum += game.score
+        #self.current_run_score_sum += game.score
+        return game.score
 
 
 class HumanPlay:
@@ -145,15 +157,3 @@ if __name__ == '__main__':
         print('AGENT')
         agent = SnakeAgent(app)
         agent.start()
-
-    # mama = NeuralNetwork()
-    # print(mama.weights)
-    # print(mama.bias)
-    #
-    # tata = NeuralNetwork()
-    # print(tata.weights)
-    # print(tata.bias)
-    #
-    # matej = crossover(mama, tata)
-    # print(matej.weights)
-    # print(matej.bias)
